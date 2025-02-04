@@ -4,8 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Quotation\StoreQuotationRequest;
-use App\Http\Requests\Quotation\UpdateQuotationRequest;
-use App\Models\Quotation;
+use App\Http\Resources\QuotationResource;
 use App\Services\QuotationService;
 use Illuminate\Http\JsonResponse;
 
@@ -23,9 +22,9 @@ class QuotationController extends Controller
     {
         $quotations = $this->quotationService->getPaginated();
 
-        return response()->json([
-            'data' => $quotations
-        ]);
+        return response()->json(
+            QuotationResource::collection($quotations)
+        );
     }
 
     /**
@@ -33,46 +32,15 @@ class QuotationController extends Controller
      */
     public function store(StoreQuotationRequest $request): JsonResponse
     {
-        $quotation = $this->quotationService->create($request->validated());
+        $quotation = $this->quotationService->create(
+            $request->validated(),
+            $request->getAges()
+        );
 
-        return response()->json([
-            'message' => 'Quotation created successfully',
-            'data' => $quotation->load('currency')
-        ], 201);
-    }
+        $quotation->load('currency');
 
-    /**
-     * Display the specified quotation.
-     */
-    public function show(Quotation $quotation): JsonResponse
-    {
-        return response()->json([
-            'data' => $quotation->load('currency')
-        ]);
-    }
-
-    /**
-     * Update the specified quotation.
-     */
-    public function update(UpdateQuotationRequest $request, Quotation $quotation): JsonResponse
-    {
-        $quotation = $this->quotationService->update($quotation, $request->validated());
-
-        return response()->json([
-            'message' => 'Quotation updated successfully',
-            'data' => $quotation->load('currency')
-        ]);
-    }
-
-    /**
-     * Remove the specified quotation.
-     */
-    public function destroy(Quotation $quotation): JsonResponse
-    {
-        $this->quotationService->delete($quotation);
-
-        return response()->json([
-            'message' => 'Quotation deleted successfully'
-        ]);
+        return (new QuotationResource($quotation))
+            ->response()
+            ->setStatusCode(201);
     }
 }

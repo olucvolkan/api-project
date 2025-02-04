@@ -1,7 +1,7 @@
 {
     "info": {
-        "name": "Laravel JWT Auth",
-        "description": "JWT Authentication endpoints collection",
+        "name": "Insurance API",
+        "description": "Insurance API with JWT Authentication",
         "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
     },
     "item": [
@@ -30,14 +30,28 @@
                             "raw": "{\n    \"name\": \"Test User\",\n    \"email\": \"test@example.com\",\n    \"password\": \"password123\",\n    \"password_confirmation\": \"password123\"\n}"
                         },
                         "url": {
-                            "raw": "{{base_url}}/api/auth/register",
+                            "raw": "{{base_url}}/api/register",
                             "host": ["{{base_url}}"],
-                            "path": ["api", "auth", "register"]
+                            "path": ["api", "register"]
                         }
                     }
                 },
                 {
                     "name": "Login",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "var jsonData = JSON.parse(responseBody);",
+                                    "if (jsonData.access_token) {",
+                                    "    pm.environment.set(\"jwt_token\", jsonData.access_token);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
                     "request": {
                         "method": "POST",
                         "header": [
@@ -57,9 +71,9 @@
                             "raw": "{\n    \"email\": \"test@example.com\",\n    \"password\": \"password123\"\n}"
                         },
                         "url": {
-                            "raw": "{{base_url}}/api/auth/login",
+                            "raw": "{{base_url}}/api/login",
                             "host": ["{{base_url}}"],
-                            "path": ["api", "auth", "login"]
+                            "path": ["api", "login"]
                         }
                     }
                 },
@@ -80,9 +94,70 @@
                             }
                         ],
                         "url": {
-                            "raw": "{{base_url}}/api/auth/logout",
+                            "raw": "{{base_url}}/api/logout",
                             "host": ["{{base_url}}"],
-                            "path": ["api", "auth", "logout"]
+                            "path": ["api", "logout"]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Quotations",
+            "description": "Quotation endpoints",
+            "item": [
+                {
+                    "name": "Create Quotation",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{jwt_token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"ages\": \"28,35\",\n    \"currency_id\": 1,\n    \"start_date\": \"2024-03-15\",\n    \"end_date\": \"2024-03-20\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/quotations",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "quotations"]
+                        }
+                    }
+                },
+                {
+                    "name": "List Quotations",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{jwt_token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/quotations",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "quotations"]
                         }
                     }
                 }
@@ -93,10 +168,6 @@
         {
             "key": "base_url",
             "value": "http://localhost:8000"
-        },
-        {
-            "key": "jwt_token",
-            "value": "your_jwt_token_here"
         }
     ]
 } 

@@ -13,10 +13,14 @@ class Quotation extends Model
 
     protected $fillable = [
         'total',
-        'currency_id'
+        'currency_id',
+        'start_date',
+        'end_date'
     ];
 
     protected $casts = [
+        'start_date' => 'date',
+        'end_date' => 'date',
         'total' => 'decimal:2'
     ];
 

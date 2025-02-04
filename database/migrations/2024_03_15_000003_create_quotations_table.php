@@ -12,10 +12,13 @@ return new class extends Migration
             $table->id();
             $table->decimal('total', 15, 2);
             $table->foreignId('currency_id')->constrained('currencies');
+            $table->date('start_date');
+            $table->date('end_date');
             $table->timestamps();
             $table->softDeletes();
 
             $table->index('currency_id');
+            $table->index(['start_date', 'end_date']);
         });
     }
 

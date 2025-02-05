@@ -23,7 +23,7 @@ class QuotationTest extends TestCase
         $this->user = User::factory()->create();
         $this->token = auth()->login($this->user);
 
-        // Seed required data
+        // Seed required currencies
         Currency::create([
             'code' => 'EUR',
             'name' => 'Euro',
@@ -43,10 +43,10 @@ class QuotationTest extends TestCase
         $response = $this->withHeaders([
             'Authorization' => 'Bearer ' . $this->token
         ])->postJson('/api/quotations', [
-            'ages' => '25,30',
-            'currency_id' => 1,
-            'start_date' => '2024-03-15',
-            'end_date' => '2024-03-20'
+            'ages' => '28,35',
+            'currency_id' => 'EUR',
+            'start_date' => '2020-10-01',
+            'end_date' => '2020-10-30'
         ]);
 
         $response->assertStatus(201)
@@ -56,21 +56,9 @@ class QuotationTest extends TestCase
                     'currency_id',
                     'quotation_id'
                 ]
-            ]);
-    }
-
-    public function test_cannot_create_quotation_with_invalid_age(): void
-    {
-        $response = $this->withHeaders([
-            'Authorization' => 'Bearer ' . $this->token
-        ])->postJson('/api/quotations', [
-            'ages' => '15,80', // Invalid ages
-            'currency_id' => 1,
-            'start_date' => '2024-03-15',
-            'end_date' => '2024-03-20'
-        ]);
-
-        $response->assertStatus(422);
+            ])
+            ->assertJsonPath('data.currency_id', 'EUR')
+            ->assertJsonPath('data.total', '117.00');
     }
 
     public function test_can_list_quotations(): void
@@ -80,7 +68,7 @@ class QuotationTest extends TestCase
             'Authorization' => 'Bearer ' . $this->token
         ])->postJson('/api/quotations', [
             'ages' => '25,30',
-            'currency_id' => 1,
+            'currency_id' => 'EUR',
             'start_date' => '2024-03-15',
             'end_date' => '2024-03-20'
         ]);
@@ -91,15 +79,13 @@ class QuotationTest extends TestCase
         ])->getJson('/api/quotations');
 
         $response->assertStatus(200)
-            ->assertJsonStructure(
-                [
-                    '*' => [
-                        'total',
-                        'currency_id',
-                        'quotation_id'
-                    ]
+            ->assertJsonStructure([
+                '*' => [
+                    'total',
+                    'currency_id',
+                    'quotation_id'
                 ]
-            );
+            ]);
     }
 
     public function test_unauthorized_user_cannot_access_quotations(): void

@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Quotation;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreQuotationRequest extends FormRequest
 {
@@ -15,7 +16,7 @@ class StoreQuotationRequest extends FormRequest
     {
         return [
             'ages' => 'required|string|regex:/^\d+(?:,\d+)*$/', // Validates comma-separated numbers
-            'currency_id' => 'required|exists:currencies,id',
+            'currency_id' => ['required', Rule::in(['EUR', 'GBP', 'USD'])],
             'start_date' => 'required|date|before_or_equal:end_date',
             'end_date' => 'required|date|after_or_equal:start_date',
         ];
@@ -25,6 +26,7 @@ class StoreQuotationRequest extends FormRequest
     {
         return [
             'ages.regex' => 'The ages must be comma-separated numbers (e.g., "25,30,35")',
+            'currency_id.in' => 'The currency code must be one of: EUR, GBP, USD',
         ];
     }
 

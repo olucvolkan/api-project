@@ -18,4 +18,4 @@ class QuotationResource extends JsonResource
             'quotation_id' => $this->id
         ];
     }
-} 
+}

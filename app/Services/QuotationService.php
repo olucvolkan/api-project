@@ -3,19 +3,25 @@
 namespace App\Services;
 
 use App\Models\AgeLoad;
-use App\Models\Currency;
 use App\Models\Quotation;
+use App\Repositories\CurrencyRepository;
+use App\Repositories\QuotationRepository;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class QuotationService
 {
     private const FIXED_RATE_PER_DAY = 3;
 
- 
+    public function __construct(
+        private QuotationRepository $quotationRepository,
+        private CurrencyRepository $currencyRepository
+    ) {}
+
     public function getPaginated(int $perPage = 10): LengthAwarePaginator
     {
-        return Quotation::with('currency')->latest()->paginate($perPage);
+        return $this->quotationRepository->getPaginated($perPage);
     }
 
     public function create(array $data, array $ages): Quotation
@@ -26,9 +32,12 @@ class QuotationService
 
         $totalLoad = $this->calculateTotalLoad($ages, $totalDays);
 
-        $currency = Currency::where('code', $data['currency_id'])->firstOrFail();
+        $currency = $this->currencyRepository->findByCode($data['currency_id']);
+        if (!$currency) {
+            throw new ModelNotFoundException('Currency not found');
+        }
 
-        return Quotation::create([
+        return $this->quotationRepository->create([
             'total' => $totalLoad,
             'currency_id' => $currency->id,
             'start_date' => $data['start_date'],

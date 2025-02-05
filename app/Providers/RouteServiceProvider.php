@@ -22,5 +22,5 @@ class RouteServiceProvider extends ServiceProvider
         });
     }
 
-    public const HOME = '/quotations';
+    public const HOME = '/';
 }

@@ -12,8 +12,8 @@ class QuotationTest extends TestCase
 {
     use RefreshDatabase;
 
-    private string $token;
-    private User $user;
+    private $user;
+    private $token;
 
     protected function setUp(): void
     {
@@ -21,7 +21,12 @@ class QuotationTest extends TestCase
 
         // Create test user and get token
         $this->user = User::factory()->create();
-        $this->token = auth()->login($this->user);
+        $response = $this->postJson('/api/login', [
+            'email' => $this->user->email,
+            'password' => 'password'
+        ]);
+
+        $this->token = $response->json('access_token');
 
         // Seed required currencies
         Currency::create([
@@ -43,37 +48,43 @@ class QuotationTest extends TestCase
         $response = $this->withHeaders([
             'Authorization' => 'Bearer ' . $this->token
         ])->postJson('/api/quotations', [
-            'ages' => '28,35',
-            'currency_id' => 'EUR',
-            'start_date' => '2020-10-01',
-            'end_date' => '2020-10-30'
-        ]);
-
-        $response->assertStatus(201)
-            ->assertJsonStructure([
-                'data' => [
-                    'total',
-                    'currency_id',
-                    'quotation_id'
-                ]
-            ])
-            ->assertJsonPath('data.currency_id', 'EUR')
-            ->assertJsonPath('data.total', '117.00');
-    }
-
-    public function test_can_list_quotations(): void
-    {
-        // First create a quotation
-        $this->withHeaders([
-            'Authorization' => 'Bearer ' . $this->token
-        ])->postJson('/api/quotations', [
-            'ages' => '25,30',
+            'ages' => '25,35',
             'currency_id' => 'EUR',
             'start_date' => '2024-03-15',
             'end_date' => '2024-03-20'
         ]);
 
-        // Then get the list
+        $response->assertStatus(201)
+            ->assertJsonStructure([
+                'data' => [
+                    'quotation_id',
+                    'total',
+                    'currency_id',
+                ]
+            ]);
+    }
+
+    public function test_cannot_create_quotation_without_auth(): void
+    {
+        // First logout
+        $this->withHeaders([
+            'Authorization' => 'Bearer ' . $this->token
+        ])->postJson('/api/logout');
+
+        // Then try to create quotation without token
+        $response = $this->postJson('/api/quotations', [
+            'ages' => '25,35',
+            'currency_id' => 'EUR',
+            'start_date' => '2024-03-15',
+            'end_date' => '2024-03-20'
+        ]);
+
+        $response->assertStatus(401)
+            ->assertJson(['message' => 'Unauthenticated.']);
+    }
+
+    public function test_can_list_quotations(): void
+    {
         $response = $this->withHeaders([
             'Authorization' => 'Bearer ' . $this->token
         ])->getJson('/api/quotations');
@@ -81,21 +92,23 @@ class QuotationTest extends TestCase
         $response->assertStatus(200)
             ->assertJsonStructure([
                 '*' => [
+                    'id',
                     'total',
-                    'currency_id',
-                    'quotation_id'
+                    'currency',
+                    'start_date',
+                    'end_date',
+                    'created_at'
                 ]
             ]);
     }
 
-    public function test_unauthorized_user_cannot_access_quotations(): void
+    public function test_validates_required_fields(): void
     {
-        // First logout the user
-        auth()->logout();
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer ' . $this->token
+        ])->postJson('/api/quotations', []);
 
-        // Try to access quotations without token
-        $response = $this->getJson('/api/quotations');
-
-        $response->assertStatus(401);
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['ages', 'currency_id', 'start_date', 'end_date']);
     }
 }

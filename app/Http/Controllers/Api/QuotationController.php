@@ -10,9 +10,9 @@ use Illuminate\Http\JsonResponse;
 
 class QuotationController extends Controller
 {
-    public function __construct(private QuotationService $quotationService)
-    {
-        $this->middleware('auth:api');
+    public function __construct(
+        private QuotationService $quotationService
+    ) {
     }
 
     /**

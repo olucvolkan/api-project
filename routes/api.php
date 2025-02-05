@@ -4,12 +4,13 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\QuotationController;
 use Illuminate\Support\Facades\Route;
 
-// Auth routes
+// Public routes
 Route::post('register', [AuthController::class, 'register']);
 Route::post('login', [AuthController::class, 'login']);
-Route::middleware('auth:api')->post('logout', [AuthController::class, 'logout']);
 
 // Protected routes
 Route::middleware('auth:api')->group(function () {
-    Route::apiResource('quotations', QuotationController::class);
+    Route::post('logout', [AuthController::class, 'logout']);
+    Route::get('quotations', [QuotationController::class, 'index']);
+    Route::post('quotations', [QuotationController::class, 'store']);
 });
